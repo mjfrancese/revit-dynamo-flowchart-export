@@ -416,3 +416,23 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# =============================================================================
+# Dynamo / Revit specific
+# =============================================================================
+
+# Revit family files (large binaries - keep out of repo)
+*.rfa
+*.rvt
+*.rte
+*.rft
+
+# Dynamo workspace backups
+*.dyn.bak
+*.dyn.backup
+
+# Flowchart export outputs (generated at runtime)
+output/
+
+# Debug text artifacts
+*.debug.txt
