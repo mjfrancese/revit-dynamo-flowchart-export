@@ -1,0 +1,9 @@
+Process Step ID,Process Step Description,Next Step ID,Function,Family Types
+1,Wall-Panel+Stud,"2;3;4",Host,"Type A;Type B"
+2,Panel-Stack,"5;6",Subassembly,"Standard"
+3,Stud-H,,Non-shared Component,"2x4;2x6"
+4,Window,"7;8",Subassembly,"36x48;48x60"
+5,Panel-Types,,Non-shared Component,"Flat;Raised"
+6,Profile-Panel-Edge,,Profile,""
+7,Window-Glass,,Non-shared Component,"Clear;Tinted"
+8,Window-Screw,,Shared Component,"#8x1;#8x1.5"

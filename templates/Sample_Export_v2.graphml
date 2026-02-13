@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns"
+         xmlns:java="http://www.yworks.com/xml/yfiles-common/1.0/java"
+         xmlns:sys="http://www.yworks.com/xml/yfiles-common/markup/primitives/2.0"
+         xmlns:x="http://www.yworks.com/xml/yfiles-common/markup/2.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:y="http://www.yworks.com/xml/graphml"
+         xmlns:yed="http://www.yworks.com/xml/yed/3"
+         xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://www.yworks.com/xml/schema/graphml/1.1/ygraphml.xsd">
+  <key attr.name="Description" attr.type="string" for="graph" id="d0"/>
+  <key attr.name="url" attr.type="string" for="node" id="d1"/>
+  <key attr.name="description" attr.type="string" for="node" id="d2"/>
+  <key for="node" id="d3" yfiles.type="nodegraphics"/>
+  <key attr.name="Function" attr.type="string" for="node" id="d4"/>
+  <key for="node" id="d5" yfiles.type="nodegraphics"/>
+  <key attr.name="url" attr.type="string" for="edge" id="d6"/>
+  <key attr.name="description" attr.type="string" for="edge" id="d7"/>
+  <key for="edge" id="d8" yfiles.type="edgegraphics"/>
+  <key attr.name="Description" attr.type="string" for="graph" id="d9"/>
+  <graph edgedefault="directed" id="G">
+    <data key="d9">Flowchart Export Template v2</data>
+
+    <!-- ============================================================ -->
+    <!-- PROTOTYPE NODES                                              -->
+    <!-- Each node below serves as a visual prototype for its         -->
+    <!-- Function type. The script clones these and updates labels.   -->
+    <!-- The d4 data element MUST match the Function string exactly.  -->
+    <!-- ============================================================ -->
+
+    <!-- Host prototype (blue rounded rectangle) -->
+    <node id="proto_host">
+      <data key="d4">Host</data>
+      <data key="d5">
+        <y:GenericNode configuration="com.yworks.flowchart.process">
+          <y:Geometry height="40.0" width="180.0" x="0.0" y="0.0"/>
+          <y:Fill color="#4169E1" transparent="false"/>
+          <y:BorderStyle color="#2F4F8F" type="line" width="2.0"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content"
+                       fontFamily="Arial" fontSize="12" fontStyle="bold"
+                       hasBackgroundColor="false" hasLineColor="false"
+                       modelName="custom" textColor="#FFFFFF">Host</y:NodeLabel>
+        </y:GenericNode>
+      </data>
+    </node>
+
+    <!-- Subassembly prototype (green rounded rectangle) -->
+    <node id="proto_subassembly">
+      <data key="d4">Subassembly</data>
+      <data key="d5">
+        <y:GenericNode configuration="com.yworks.flowchart.process">
+          <y:Geometry height="40.0" width="180.0" x="0.0" y="60.0"/>
+          <y:Fill color="#3CB371" transparent="false"/>
+          <y:BorderStyle color="#2E8B57" type="line" width="1.0"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content"
+                       fontFamily="Arial" fontSize="11" fontStyle="plain"
+                       hasBackgroundColor="false" hasLineColor="false"
+                       modelName="custom" textColor="#FFFFFF">Subassembly</y:NodeLabel>
+        </y:GenericNode>
+      </data>
+    </node>
+
+    <!-- Shared Component prototype (orange rounded rectangle) -->
+    <node id="proto_shared">
+      <data key="d4">Shared Component</data>
+      <data key="d5">
+        <y:GenericNode configuration="com.yworks.flowchart.process">
+          <y:Geometry height="40.0" width="180.0" x="0.0" y="120.0"/>
+          <y:Fill color="#FF8C00" transparent="false"/>
+          <y:BorderStyle color="#CC7000" type="line" width="1.0"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content"
+                       fontFamily="Arial" fontSize="11" fontStyle="plain"
+                       hasBackgroundColor="false" hasLineColor="false"
+                       modelName="custom" textColor="#FFFFFF">Shared Component</y:NodeLabel>
+        </y:GenericNode>
+      </data>
+    </node>
+
+    <!-- Non-shared Component prototype (gray rounded rectangle) -->
+    <node id="proto_nonshared">
+      <data key="d4">Non-shared Component</data>
+      <data key="d5">
+        <y:GenericNode configuration="com.yworks.flowchart.process">
+          <y:Geometry height="40.0" width="180.0" x="0.0" y="180.0"/>
+          <y:Fill color="#A9A9A9" transparent="false"/>
+          <y:BorderStyle color="#808080" type="line" width="1.0"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content"
+                       fontFamily="Arial" fontSize="11" fontStyle="plain"
+                       hasBackgroundColor="false" hasLineColor="false"
+                       modelName="custom" textColor="#FFFFFF">Non-shared Component</y:NodeLabel>
+        </y:GenericNode>
+      </data>
+    </node>
+
+    <!-- Profile prototype (purple rounded rectangle) -->
+    <node id="proto_profile">
+      <data key="d4">Profile</data>
+      <data key="d5">
+        <y:GenericNode configuration="com.yworks.flowchart.process">
+          <y:Geometry height="40.0" width="180.0" x="0.0" y="240.0"/>
+          <y:Fill color="#9370DB" transparent="false"/>
+          <y:BorderStyle color="#7B68AE" type="line" width="1.0"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content"
+                       fontFamily="Arial" fontSize="11" fontStyle="plain"
+                       hasBackgroundColor="false" hasLineColor="false"
+                       modelName="custom" textColor="#FFFFFF">Profile</y:NodeLabel>
+        </y:GenericNode>
+      </data>
+    </node>
+
+    <!-- ============================================================ -->
+    <!-- PROTOTYPE EDGE                                               -->
+    <!-- One edge is required so the script can clone edge styling.   -->
+    <!-- Direction: child -> parent (yEd flow direction)              -->
+    <!-- ============================================================ -->
+    <edge id="proto_edge" source="proto_subassembly" target="proto_host">
+      <data key="d8">
+        <y:PolyLineEdge>
+          <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0"/>
+          <y:LineStyle color="#333333" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+
+  </graph>
+</graphml>
