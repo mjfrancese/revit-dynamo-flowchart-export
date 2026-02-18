@@ -2,6 +2,9 @@
 # Flowchart Export v5.3 (Independent Per-Output File Paths)
 #
 # CHANGELOG from v5.2:
+# [v5.3-4] now_iso_local() now uses datetime.now().astimezone().isoformat(timespec="seconds")
+#           producing ISO 8601 with local UTC offset (e.g. 2026-02-18T12:16:17-06:00).
+#           Previously the format had no timezone indicator and Microsoft Lists defaulted to UTC.
 # [v5.3-1] All four SharePoint CSVs (FamilyCatalog, FamilyEdges, FamilyParameters, FamilyTypes)
 #           now accept independent, explicitly specified paths via IN[2]-IN[5].
 #           Any path left None/empty auto-derives from out_folder (same behaviour as v5.2).
@@ -269,7 +272,10 @@ def TF(x):
     return "TRUE" if bool(x) else "FALSE"
 
 def now_iso_local():
-    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    # Returns ISO 8601 with local UTC offset (e.g. 2026-02-18T12:16:17-06:00).
+    # astimezone() attaches the system timezone so Microsoft Lists interprets
+    # the timestamp as Central time instead of defaulting to UTC.
+    return datetime.now().astimezone().isoformat(timespec="seconds")
 
 # =============================================================================
 # Family helpers
