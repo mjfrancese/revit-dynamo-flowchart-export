@@ -2,15 +2,13 @@
 # Flowchart Export v5.3 (Independent Per-Output File Paths)
 #
 # CHANGELOG from v5.2:
-# [v5.3-1] All six output files now accept independent, explicitly specified paths via IN[]:
-#           Each SharePoint CSV (FamilyCatalog, FamilyEdges, FamilyParameters, FamilyTypes),
-#           the main flowchart CSV, and the GraphML are individually addressable.
-#           Any path left None/empty auto-derives from the output_csv location.
-# [v5.3-2] Removed legacy base-folder / .csv-suffix dual-mode path logic (IN[0] is now
-#           always a full explicit CSV path, never a folder).
-# [v5.3-3] write_sharepoint_list_exports() signature changed: accepts four explicit path
+# [v5.3-1] All four SharePoint CSVs (FamilyCatalog, FamilyEdges, FamilyParameters, FamilyTypes)
+#           now accept independent, explicitly specified paths via IN[2]-IN[5].
+#           Any path left None/empty auto-derives from out_folder (same behaviour as v5.2).
+#           IN[0] folder-mode and legacy .csv-suffix logic are preserved unchanged from v5.2.
+# [v5.3-2] write_sharepoint_list_exports() signature changed: accepts four explicit path
 #           arguments instead of (folder, host_name_str).
-# [v5.3-4] IN structure expanded from 5 to 9 inputs to accommodate per-file paths.
+# [v5.3-3] IN structure expanded from 5 to 9 inputs to accommodate per-file paths.
 #
 # CHANGELOG from v5.1:
 # [4a] edge_all_types parallel tracker: records ALL observed edge types per pair
@@ -35,30 +33,32 @@
 # [12] group_to_string uses GetGroupTypeId first (modern API path)
 #
 # Exports:
-# - Main flowchart CSV:           IN[0] (required, full path)
-# - GraphML (from template):      IN[1] (optional; auto: <output_csv_stem>.graphml)
+# - Main flowchart CSV:           <out_folder>/<host>.csv           (auto from IN[0])
+# - GraphML (from template):      <out_folder>/<host>.graphml       (auto) OR IN[1] explicit
+# - Debug TXT (optional):         <out_folder>/<host>.txt           (written only when IN[8] True)
 # - SharePoint Lists CSVs:
-#     FamilyCatalog CSV:          IN[2] (optional; auto: <csv_dir>/<host>__FamilyCatalog.csv)
-#     FamilyEdges CSV:            IN[3] (optional; auto: <csv_dir>/<host>__FamilyEdges.csv)
-#     FamilyParameters CSV:       IN[4] (optional; auto: <csv_dir>/<host>__FamilyParameters.csv)
-#     FamilyTypes CSV:            IN[5] (optional; auto: <csv_dir>/<host>__FamilyTypes.csv)
-# - Debug TXT (optional):         <output_csv_stem>.txt  (written only when IN[8] is True)
+#     FamilyCatalog CSV:          IN[2] explicit  OR  auto: <out_folder>/<host>__FamilyCatalog.csv
+#     FamilyEdges CSV:            IN[3] explicit  OR  auto: <out_folder>/<host>__FamilyEdges.csv
+#     FamilyParameters CSV:       IN[4] explicit  OR  auto: <out_folder>/<host>__FamilyParameters.csv
+#     FamilyTypes CSV:            IN[5] explicit  OR  auto: <out_folder>/<host>__FamilyTypes.csv
 #
 # Inputs:
-# IN[0] = output_csv           (string, required)  Full path for main flowchart CSV
-# IN[1] = output_graphml       (string, optional)  Full path for GraphML output
-#                                                   Auto: same dir/stem as output_csv + .graphml
+# IN[0] = base output folder (string) OR legacy full output CSV path (string ending in .csv)
+#           Folder mode:  out_folder = <IN[0]>/<prefix>/  (created if absent)
+#                         all file names derived from host family name
+#           Legacy mode:  output_csv = IN[0];  out_folder = dirname(IN[0])
+# IN[1] = output GraphML full path (string, optional; defaults to computed .graphml)
 # IN[2] = output_catalog_csv   (string, optional)  Full path for FamilyCatalog CSV
-#                                                   Auto: <csv_dir>/<host>__FamilyCatalog.csv
+#                                                   Auto: <out_folder>/<host>__FamilyCatalog.csv
 # IN[3] = output_edges_csv     (string, optional)  Full path for FamilyEdges CSV
-#                                                   Auto: <csv_dir>/<host>__FamilyEdges.csv
+#                                                   Auto: <out_folder>/<host>__FamilyEdges.csv
 # IN[4] = output_params_csv    (string, optional)  Full path for FamilyParameters CSV
-#                                                   Auto: <csv_dir>/<host>__FamilyParameters.csv
+#                                                   Auto: <out_folder>/<host>__FamilyParameters.csv
 # IN[5] = output_types_csv     (string, optional)  Full path for FamilyTypes CSV
-#                                                   Auto: <csv_dir>/<host>__FamilyTypes.csv
-# IN[6] = template_graphml     (string, required)  Path to Sample_Export_v2.graphml template
-# IN[7] = include_profiles     (bool)              Include Profile-category families
-# IN[8] = debug                (bool)              Write debug .txt with OUT + log
+#                                                   Auto: <out_folder>/<host>__FamilyTypes.csv
+# IN[6] = template GraphML full path (string)  <-- Sample_Export_v2.graphml
+# IN[7] = include_profiles (bool)
+# IN[8] = debug (bool)
 
 import clr
 import os
@@ -88,7 +88,7 @@ doc = DocumentManager.Instance.CurrentDBDocument
 # =============================================================================
 # Inputs
 # =============================================================================
-in0              = IN[0] if len(IN) > 0 else None   # output_csv           (required)
+in0              = IN[0] if len(IN) > 0 else None   # base folder OR legacy .csv path (required)
 in1              = IN[1] if len(IN) > 1 else None   # output_graphml       (optional)
 in2              = IN[2] if len(IN) > 2 else None   # output_catalog_csv   (optional)
 in3              = IN[3] if len(IN) > 3 else None   # output_edges_csv     (optional)
@@ -145,44 +145,59 @@ def sanitize_csv_value(val):
 
 # =============================================================================
 # [v5.3] Determine output paths
-# IN[0] = output_csv is always a full explicit path (required).
-# IN[1]-IN[5] are optional explicit paths; each auto-derives when None/empty.
-# Auto-derivation for all outputs is anchored to the output_csv location.
+# IN[0]/IN[1] follow the same folder-mode / legacy-mode logic as v5.2.
+# out_folder is established first; IN[2]-IN[5] are then resolved against it.
 # =============================================================================
 if not in0 or not isinstance(in0, str) or not in0.strip():
-    raise Exception("IN[0] must be the full output CSV path (e.g. C:\\Data\\MyFamily.csv).")
-
-output_csv = in0.strip()
+    raise Exception("IN[0] must be a base folder path OR a full output CSV path.")
 
 host_name = get_doc_family_name(doc)
 prefix = host_name.split("-", 1)[0].strip() if "-" in host_name else host_name.strip()
 if not prefix:
     prefix = "Misc"
 
-# Anchor directory and stem for all auto-derived paths
-_csv_dir  = os.path.dirname(output_csv) or "."
-_csv_stem = os.path.splitext(output_csv)[0]
+def is_legacy_csv_path(s):
+    try:
+        return (s or "").strip().lower().endswith(".csv")
+    except:
+        return False
 
+if is_legacy_csv_path(in0):
+    output_csv = in0
+    if (not in1) or (not isinstance(in1, str)) or (not in1.strip()):
+        base, _ = os.path.splitext(output_csv)
+        output_graphml = base + ".graphml"
+    else:
+        output_graphml = in1
+    out_folder = os.path.dirname(output_csv)
+else:
+    base_folder = in0
+    out_folder = os.path.join(base_folder, prefix)
+    if not os.path.exists(out_folder):
+        os.makedirs(out_folder)
+    output_csv = os.path.join(out_folder, host_name + ".csv")
+    if (not in1) or (not isinstance(in1, str)) or (not in1.strip()):
+        output_graphml = os.path.join(out_folder, host_name + ".graphml")
+    else:
+        output_graphml = in1
+
+# [v5.3-1] Per-file SharePoint CSV path overrides (IN[2]-IN[5]).
+# Each defaults to the same auto-derived path that v5.2 used when not provided.
 def _resolve_optional_path(in_val, auto_path):
     """Return in_val if it is a non-empty string, else return auto_path."""
     if in_val and isinstance(in_val, str) and in_val.strip():
         return in_val.strip()
     return auto_path
 
-# IN[1]: GraphML output path
-output_graphml = _resolve_optional_path(in1, _csv_stem + ".graphml")
-
-# IN[2]-IN[5]: SharePoint CSV paths (each independently settable)
 output_catalog_csv = _resolve_optional_path(
-    in2, os.path.join(_csv_dir, host_name + "__FamilyCatalog.csv"))
+    in2, os.path.join(out_folder, host_name + "__FamilyCatalog.csv"))
 output_edges_csv   = _resolve_optional_path(
-    in3, os.path.join(_csv_dir, host_name + "__FamilyEdges.csv"))
+    in3, os.path.join(out_folder, host_name + "__FamilyEdges.csv"))
 output_params_csv  = _resolve_optional_path(
-    in4, os.path.join(_csv_dir, host_name + "__FamilyParameters.csv"))
+    in4, os.path.join(out_folder, host_name + "__FamilyParameters.csv"))
 output_types_csv   = _resolve_optional_path(
-    in5, os.path.join(_csv_dir, host_name + "__FamilyTypes.csv"))
+    in5, os.path.join(out_folder, host_name + "__FamilyTypes.csv"))
 
-# IN[6]: template GraphML (required)
 if (not template_graphml) or (not isinstance(template_graphml, str)) or (not template_graphml.strip()):
     raise Exception("IN[6] must be a template GraphML path (Sample_Export_v2.graphml).")
 if not os.path.exists(template_graphml):
