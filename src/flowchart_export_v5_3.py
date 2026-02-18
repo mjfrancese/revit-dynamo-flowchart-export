@@ -48,14 +48,14 @@
 #                         all file names derived from host family name
 #           Legacy mode:  output_csv = IN[0];  out_folder = dirname(IN[0])
 # IN[1] = output GraphML full path (string, optional; defaults to computed .graphml)
-# IN[2] = output_catalog_csv   (string, optional)  Full path for FamilyCatalog CSV
-#                                                   Auto: <out_folder>/<host>__FamilyCatalog.csv
-# IN[3] = output_edges_csv     (string, optional)  Full path for FamilyEdges CSV
-#                                                   Auto: <out_folder>/<host>__FamilyEdges.csv
-# IN[4] = output_params_csv    (string, optional)  Full path for FamilyParameters CSV
-#                                                   Auto: <out_folder>/<host>__FamilyParameters.csv
-# IN[5] = output_types_csv     (string, optional)  Full path for FamilyTypes CSV
-#                                                   Auto: <out_folder>/<host>__FamilyTypes.csv
+# IN[2] = output_catalog_csv   (string, optional)  FamilyCatalog CSV destination
+# IN[3] = output_edges_csv     (string, optional)  FamilyEdges CSV destination
+# IN[4] = output_params_csv    (string, optional)  FamilyParameters CSV destination
+# IN[5] = output_types_csv     (string, optional)  FamilyTypes CSV destination
+#           Each accepts three forms:
+#             None / empty     -> auto: <out_folder>/<host>__<Suffix>.csv
+#             folder path      -> join: <folder>/<host>__<Suffix>.csv
+#             full .csv path   -> used as-is
 # IN[6] = template GraphML full path (string)  <-- Sample_Export_v2.graphml
 # IN[7] = include_profiles (bool)
 # IN[8] = debug (bool)
@@ -183,20 +183,29 @@ else:
 
 # [v5.3-1] Per-file SharePoint CSV path overrides (IN[2]-IN[5]).
 # Each defaults to the same auto-derived path that v5.2 used when not provided.
-def _resolve_optional_path(in_val, auto_path):
-    """Return in_val if it is a non-empty string, else return auto_path."""
-    if in_val and isinstance(in_val, str) and in_val.strip():
-        return in_val.strip()
-    return auto_path
+# Accepts three forms:
+#   None / empty       -> auto:  <out_folder>/<host>__<suffix>.csv
+#   folder path        -> join:  <in_val>/<host>__<suffix>.csv
+#   full file path     -> as-is: <in_val>
+def _resolve_sp_path(in_val, default_filename):
+    """Resolve a SharePoint CSV output path.
 
-output_catalog_csv = _resolve_optional_path(
-    in2, os.path.join(out_folder, host_name + "__FamilyCatalog.csv"))
-output_edges_csv   = _resolve_optional_path(
-    in3, os.path.join(out_folder, host_name + "__FamilyEdges.csv"))
-output_params_csv  = _resolve_optional_path(
-    in4, os.path.join(out_folder, host_name + "__FamilyParameters.csv"))
-output_types_csv   = _resolve_optional_path(
-    in5, os.path.join(out_folder, host_name + "__FamilyTypes.csv"))
+    in_val may be None/empty (auto-derive into out_folder),
+    a directory path (append default_filename inside it),
+    or a full file path ending in .csv (use as-is).
+    """
+    if not in_val or not isinstance(in_val, str) or not in_val.strip():
+        return os.path.join(out_folder, default_filename)
+    val = in_val.strip()
+    # If the value doesn't end in .csv, treat it as a folder
+    if not val.lower().endswith(".csv"):
+        return os.path.join(val, default_filename)
+    return val
+
+output_catalog_csv = _resolve_sp_path(in2, host_name + "__FamilyCatalog.csv")
+output_edges_csv   = _resolve_sp_path(in3, host_name + "__FamilyEdges.csv")
+output_params_csv  = _resolve_sp_path(in4, host_name + "__FamilyParameters.csv")
+output_types_csv   = _resolve_sp_path(in5, host_name + "__FamilyTypes.csv")
 
 if (not template_graphml) or (not isinstance(template_graphml, str)) or (not template_graphml.strip()):
     raise Exception("IN[6] must be a template GraphML path (Sample_Export_v2.graphml).")
